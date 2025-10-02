@@ -1,0 +1,15 @@
+FROM debian:bullseye-slim
+
+LABEL image.author.name="Eisenmann, Bastian"
+LABEL image.author.email="bastian.eisenmann@student.uni-tuebingen.de"
+
+# Install dependencies
+RUN apt-get update && apt-get install -y curl wget cmake python3
+
+RUN wget https://github.com/COMBINE-lab/salmon/releases/download/v1.10.0/salmon-1.10.0_linux_x86_64.tar.gz -O salmon.tar.gz
+RUN tar -xzf salmon.tar.gz 
+RUN mv /salmon-latest_linux_x86_64 /usr/bin/salmon
+RUN rm -rf salmon-latest_linux_x86_64/
+
+# Set the PATH environment variable (to /usr/bin)
+ENV PATH="/usr/bin/salmon/bin:$PATH"
