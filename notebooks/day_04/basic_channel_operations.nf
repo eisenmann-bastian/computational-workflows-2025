@@ -8,6 +8,7 @@ workflow{
     if (params.step == 1) {
         in_ch = channel.of(1,2,3)
 
+        out_ch = in_ch.first()
     }
 
     // Task 2 - Extract the last item from the channel
@@ -16,6 +17,7 @@ workflow{
 
         in_ch = channel.of(1,2,3)
 
+        out_ch = in_ch.last()
     }
 
     // Task 3 - Use an operator to extract the first two items from the channel
@@ -24,16 +26,14 @@ workflow{
 
         in_ch = channel.of(1,2,3)
 
-
+        out_ch = in_ch.take(2)
     }
 
     // Task 4 - Return the squared values of the channel
     
     if (params.step == 4) {
-
         in_ch = channel.of(2,3,4)
-
-
+        out_ch = in_ch.map { it -> it * it }
     }
 
     // Task 5 - Remember the previous task where you squared the values of the channel. Now, extract the first two items from the squared channel
@@ -41,8 +41,7 @@ workflow{
     if (params.step == 5) {
 
         in_ch = channel.of(2,3,4)
-        in_ch.map { it -> it * it }.take(2).view()
-        
+        out_ch = in_ch.map { it -> it * it }.take(2)
     }
 
     // Task 6 - Remember when you used bash to reverse the output? Try to use map and Groovy to reverse the output
@@ -51,6 +50,7 @@ workflow{
         
         in_ch = channel.of('Taylor', 'Swift')
 
+        out_ch = in_ch.map { it -> it.reverse() }
     }
 
     // Task 7 - Use fromPath to include all fastq files in the "files_dir" directory, then use map to return a pair containing the file name and the file path (Hint: include groovy code)
@@ -59,18 +59,16 @@ workflow{
 
         in_ch = channel.fromPath('files_dir/*.fq')
 
-        
+        out_ch = in_ch.map { file -> [file.getName(), file] }
+    
     }
 
     // Task 8 - Combine the items from the two channels into a single channel
 
     if (params.step == 8) {
-
         ch_1 = channel.of(1,2,3)
         ch_2 = channel.of(4,5,6)
-        out_ch = channel.of("a", "b", "c")
-
-
+        out_ch = ch_1.concat(ch_2)
     }
 
     // Task 9 - Flatten the channel
@@ -79,6 +77,7 @@ workflow{
 
         in_ch = channel.of([1,2,3], [4,5,6])
 
+        out_ch = in_ch.flatten()
 
     }
 
@@ -87,7 +86,7 @@ workflow{
     if (params.step == 10) {
 
         in_ch = channel.of(1,2,3)
-
+        out_ch = in_ch.collect()
     }
     
 
@@ -101,6 +100,7 @@ workflow{
 
         in_ch = channel.of([1, 'V'], [3, 'M'], [2, 'O'], [1, 'f'], [3, 'G'], [1, 'B'], [2, 'L'], [2, 'E'], [3, '33'])
 
+        out_ch = in_ch.groupTuple()
     }
 
     // Task 12 - Create a channel that joins the input to the output channel. What do you notice
@@ -109,6 +109,8 @@ workflow{
 
         left_ch = channel.of([1, 'V'], [3, 'M'], [2, 'O'], [1, 'B'], [3, '33'])
         right_ch = channel.of([1, 'f'], [3, 'G'], [2, 'L'], [2, 'E'],)
+
+        out_ch = left_ch.join(right_ch)
 
     }
 
@@ -119,10 +121,19 @@ workflow{
 
         in_ch = channel.of(1,2,3,4,5,6,7,8,9,10)
 
+        even_ch = in_ch.filter { it % 2 == 0 }
+        odd_ch = in_ch.filter { it % 2 != 0 }
+
+        even_ch.collect().view { "Even numbers: ${it}" }
+        odd_ch.collect().view { "Odd numbers: ${it}" }
+
+        out_ch = channel.of()
     }
 
-    // Task 14 - Nextflow has the concept of maps. Write the names in the maps in this channel to a file called "names.txt". Each name should be on a new line. 
-    //           Store the file in the "results" directory under the name "names.txt"
+    // Task 14 - Nextflow has the concept of maps.
+    // Write the names in the maps in this channel to a file called "names.txt".
+    // Each name should be on a new line. 
+    // Store the file in the "results" directory under the name "names.txt"
 
     if (params.step == 14) {
 
@@ -131,12 +142,14 @@ workflow{
             ['name': 'Ron', 'title': 'student'],
             ['name': 'Hermione', 'title': 'student'],
             ['name': 'Albus', 'title': 'headmaster'],
-            ['name': 'Snape', 'title': 'teacher'],
+            ['name': 'Severus', 'title': 'teacher'],
             ['name': 'Hagrid', 'title': 'groundkeeper'],
             ['name': 'Dobby', 'title': 'hero'],
         )
-    
+
+        out_ch = in_ch.map { it.name }.collect().map { it.join('\n') }
+        out_ch.collectFile(name: "results/names.txt")
     }
 
-
+    out_ch.view()
 }
